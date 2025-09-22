@@ -1,0 +1,48 @@
+pipeline {
+  agent any
+
+  environment {
+    ECR_REG = "<ECR_REGISTRY_PLACEHOLDER>" // replace or set via Jenkins credentials/env
+    IMAGE = "${env.ECR_REG}/devops-ci-cd-demo-app:${env.GIT_COMMIT}"
+  }
+
+  stages {
+    stage('Checkout') {
+      steps { checkout scm }
+    }
+
+    stage('Build Docker Image') {
+      steps {
+        sh 'docker --version'
+        sh "docker build -t ${IMAGE} ."
+      }
+    }
+
+    stage('Login to ECR') {
+      steps {
+        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials-id']]) {
+          sh '''
+            aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${ECR_REG}
+          '''
+        }
+      }
+    }
+
+    stage('Push Image') {
+      steps {
+        sh "docker push ${IMAGE}"
+      }
+    }
+
+    stage('Deploy via Ansible') {
+      steps {
+        withCredentials([sshUserPrivateKey(credentialsId: 'app-ssh-key', keyFileVariable: 'SSH_KEY')]) {
+          sh '''
+            # prepare inventory dynamically or use the repo inventory
+            ansible-playbook -i ansible/inventory.ini ansible/deploy.yml -e "image_tag=${GIT_COMMIT}" -e "ECR_REG=${ECR_REG}"
+          '''
+        }
+      }
+    }
+  }
+}
