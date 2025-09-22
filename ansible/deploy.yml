@@ -1,0 +1,19 @@
+- hosts: app
+  become: yes
+  tasks:
+    - name: Install Docker
+      apt:
+        name: docker.io
+        state: present
+        update_cache: yes
+
+    - name: Login to ECR
+      shell: aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin {{ ECR_REG }}
+
+    - name: Pull latest image
+      shell: docker pull {{ ECR_REG }}/devops-ci-cd-demo-app:{{ image_tag }}
+
+    - name: Run container
+      shell: |
+        docker rm -f demoapp || true
+        docker run -d --name demoapp -p 80:5000 {{ ECR_REG }}/devops-ci-cd-demo-app:{{ image_tag }}
