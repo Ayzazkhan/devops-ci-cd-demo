@@ -22,13 +22,11 @@ pipeline {
     steps {
       withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials-id']]) {
         script {
-          // Run login command and print output explicitly
-          def loginResult = sh(script: '/usr/local/bin/aws ecr get-login-password --region us-east-1 | /usr/bin/docker login --username AWS --password-stdin ${ECR_REG}', returnStatus: true)
-          if (loginResult != 0) {
-            echo "Warning: docker login returned non-zero exit code, ignoring..."
-          } else {
-            echo "ECR login succeeded"
-          }
+          def loginOutput = sh(
+            script: '/usr/local/bin/aws ecr get-login-password --region us-east-1 | /usr/bin/docker login --username AWS --password-stdin ${ECR_REG}',
+            returnStdout: true
+          ).trim()
+          echo "ECR login output: ${loginOutput}"
         }
       }
     }
@@ -55,6 +53,7 @@ pipeline {
     }
   }
 }
+
 
 
 
