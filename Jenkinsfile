@@ -18,19 +18,16 @@ pipeline {
       }
     }
 
-stage('Login to ECR') {
-  steps {
-    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials-id']]) {
-      script {
-        def loginOutput = sh(
-          script: '/usr/local/bin/aws ecr get-login-password --region us-east-1 | /usr/bin/docker login --username AWS --password-stdin ${ECR_REG}',
-          returnStdout: true
-        ).trim()
-        echo "ECR login output: ${loginOutput}"
+    
+    stage('Login to ECR') {
+      steps {
+        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials-id']]) {
+          sh '''
+            aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${ECR_REG}
+          '''
+        }
       }
     }
-  }
-}
 
 
 
@@ -55,6 +52,7 @@ stage('Login to ECR') {
     }
   }
 }
+
 
 
 
