@@ -2,7 +2,7 @@ pipeline {
   agent any
 
   environment {
-    ECR_REG = "303927185771.dkr.ecr.us-east-1.amazonaws.com/devops-ci-cd-demo-app" // replace or set via Jenkins credentials/env
+    ECR_REG = "303927185771.dkr.ecr.us-east-1.amazonaws.com" // replace or set via Jenkins credentials/env
     IMAGE = "${env.ECR_REG}/devops-ci-cd-demo-app:${env.GIT_COMMIT}"
   }
 
@@ -52,6 +52,7 @@ pipeline {
     }
   }
 }
+
 
 
 
