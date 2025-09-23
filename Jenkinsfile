@@ -36,10 +36,15 @@ pipeline {
 
     stage('Push Image') {
       steps {
-        sh "docker push ${IMAGE}"
+        script {
+          def pushOutput = sh(
+            script: "docker push ${IMAGE}",
+            returnStdout: true
+          ).trim()
+          echo "Docker push output:\n${pushOutput}"
+        }
       }
     }
-
     stage('Deploy via Ansible') {
       steps {
         withCredentials([sshUserPrivateKey(credentialsId: 'app-ssh-key', keyFileVariable: 'SSH_KEY')]) {
@@ -52,6 +57,7 @@ pipeline {
     }
   }
 }
+
 
 
 
