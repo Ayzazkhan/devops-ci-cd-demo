@@ -36,14 +36,17 @@ pipeline {
     stage('Push Image') {
       steps {
         script {
+          // Capture only the final image digest from `docker inspect`
+          sh "docker push ${IMAGE}"
           def imageDigest = sh(
-            script: "docker push ${IMAGE} --quiet",
+            script: "docker inspect --format='{{index .RepoDigests 0}}' ${IMAGE}",
             returnStdout: true
           ).trim()
-          echo "✅ Image pushed successfully. Digest: ${imageDigest}"
+          echo "✅ Image pushed successfully: ${imageDigest}"
         }
       }
     }
+
 
 
     stage('Deploy via Ansible') {
@@ -58,6 +61,7 @@ pipeline {
     }
   }
 }
+
 
 
 
