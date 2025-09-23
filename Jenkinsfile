@@ -36,14 +36,15 @@ pipeline {
     stage('Push Image') {
       steps {
         script {
-          def pushOutput = sh(
-            script: "docker push ${IMAGE}",
+          def imageDigest = sh(
+            script: "docker push ${IMAGE} --quiet",
             returnStdout: true
           ).trim()
-          echo "Docker push finished:\n${pushOutput}"
+          echo "✅ Image pushed successfully. Digest: ${imageDigest}"
         }
       }
     }
+
 
     stage('Deploy via Ansible') {
       steps {
@@ -57,6 +58,7 @@ pipeline {
     }
   }
 }
+
 
 
 
