@@ -1,19 +1,36 @@
 - hosts: app
   become: yes
+  vars:
+    ecr_reg: "{{ lookup('env','ECR_REG') | default(ECR_REG | default('')) }}"
+    image_tag: "{{ image_tag | default('latest') }}"
   tasks:
-    - name: Install Docker
+
+    - name: Ensure docker installed
       apt:
         name: docker.io
         state: present
         update_cache: yes
 
+    - name: Ensure docker service running
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
     - name: Login to ECR
-      shell: aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin {{ ECR_REG }}
-
-    - name: Pull latest image
-      shell: docker pull {{ ECR_REG }}/devops-ci-cd-demo-app:{{ image_tag }}
-
-    - name: Run container
       shell: |
-        docker rm -f demoapp || true
-        docker run -d --name demoapp -p 80:5000 {{ ECR_REG }}/devops-ci-cd-demo-app:{{ image_tag }}
+        aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin {{ ecr_reg }}
+      environment:
+        AWS_ACCESS_KEY_ID: "{{ lookup('env','AWS_ACCESS_KEY_ID') }}"
+        AWS_SECRET_ACCESS_KEY: "{{ lookup('env','AWS_SECRET_ACCESS_KEY') }}"
+      args:
+        executable: /bin/bash
+
+    - name: Pull Docker Image
+      shell: docker pull {{ ecr_reg }}/devops-ci-cd-demo-app:{{ image_tag }}
+
+    - name: Stop old container
+      shell: docker rm -f devops-app || true
+
+    - name: Run new container
+      shell: docker run -d --name devops-app -p 80:5000 {{ ecr_reg }}/devops-ci-cd-demo-app:{{ image_tag }}
