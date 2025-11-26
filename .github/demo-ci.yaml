@@ -1,0 +1,20 @@
+# File: .github/workflows/demo.yml
+name: Demo Workflow
+
+# Trigger the workflow on push to main or on pull request
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  demo-job:
+    runs-on: ubuntu-latest
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Step 4: Run a simple demo script
+      - name: Run demo script
+        run: echo "Hello Students! GitHub Actions is running!"
